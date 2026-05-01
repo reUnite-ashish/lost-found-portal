@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Requests - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') %}
+        <li><a href="/admin" class="btn-nav">⚙️ Admin Dashboard</a></li>
+        <li><a href="/logout" class="btn-logout">Logout</a></li>
+      {% else %}
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/report">➕ Report Item</a></li>
+            <li><a href="/my-items">🧳 My Items</a></li>
+            <li><a href="/matches">🔄 Matches</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-claims">📋 My Claims</a></li>
+            <li><a href="/notifications">🔔 Notifications</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-chats">💬 Chats</a></li>
+            <li><a href="/contact-admin">📧 Contact Admin</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+          </ul>
+        </li>
+      {% endif %}
+    {% else %}
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/register" class="btn-nav">Sign up</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="page-content">
+  <h1>💬 Contact Requests</h1>
+  
+  <!-- RECEIVED REQUESTS -->
+  <div style="margin-bottom: 3rem;">
+    <h2 style="font-size: 1.3rem; margin-bottom: 1rem;">📥 Requests I Received</h2>
+    
+    {% if received %}
+      <div style="display: grid; gap: 1rem;">
+        {% for req in received %}
+          <div class="card" style="padding: 1.5rem; border-left: 4px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h3 style="margin: 0 0 0.5rem 0;">👤 {{ req.from_username }}</h3>
+                <p style="margin: 0.5rem 0; color: #666;">
+                  <strong>Item:</strong> {{ req.item_name }}
+                </p>
+                {% if req.message %}
+                  <p style="margin: 0.5rem 0; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
+                    💬 {{ req.message }}
+                  </p>
+                {% endif %}
+                <small style="color: #999;">{{ req.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+              </div>
+              <div style="text-align: right;">
+                {% if req.status == 'pending' %}
+                  <span class="badge" style="display: inline-block; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; background: #fef08a; color: #854d0e;">
+                    {{ req.status|upper }}
+                  </span>
+                {% elif req.status == 'accepted' %}
+                  <span class="badge" style="display: inline-block; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; background: #dcfce7; color: #166534;">
+                    {{ req.status|upper }}
+                  </span>
+                {% else %}
+                  <span class="badge" style="display: inline-block; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; background: #fee2e2; color: #7f1d1d;">
+                    {{ req.status|upper }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <!-- ONLY SHOW BUTTONS IF PENDING -->
+            {% if req.status == 'pending' %}
+              <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <form method="POST" action="/contact-request/{{ req.id }}/respond" style="display: inline;">
+                  <input type="hidden" name="action" value="accept">
+                  <button type="submit" class="btn-primary" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">✅ Accept</button>
+                </form>
+                <form method="POST" action="/contact-request/{{ req.id }}/respond" style="display: inline;">
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">❌ Reject</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: #666; padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+        No incoming contact requests yet
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- HR -->
+  <hr style="margin: 2rem 0; border: none; border-top: 2px solid #e5e7eb;">
+
+  <!-- SENT REQUESTS -->
+  <div>
+    <h2 style="font-size: 1.3rem; margin-bottom: 1rem;">📤 Requests I Sent</h2>
+    
+    {% if sent %}
+      <div style="display: grid; gap: 1rem;">
+        {% for req in sent %}
+          <div class="card" style="padding: 1.5rem; border-left: 4px solid #3b82f6;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h3 style="margin: 0 0 0.5rem 0;">👤 {{ req.to_username }}</h3>
+                <p style="margin: 0.5rem 0; color: #666;">
+                  <strong>Item:</strong> {{ req.item_name }}
+                </p>
+                {% if req.message %}
+                  <p style="margin: 0.5rem 0; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
+                    💬 {{ req.message }}
+                  </p>
+                {% endif %}
+                <small style="color: #999;">{{ req.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+              </div>
+              <div style="text-align: right;">
+                {% if req.status == 'pending' %}
+                  <span class="badge" style="display: inline-block; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; background: #fef08a; color: #854d0e;">
+                    {{ req.status|upper }}
+                  </span>
+                {% elif req.status == 'accepted' %}
+                  <span class="badge" style="display: inline-block; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; background: #dcfce7; color: #166534;">
+                    {{ req.status|upper }}
+                  </span>
+                {% else %}
+                  <span class="badge" style="display: inline-block; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; background: #fee2e2; color: #7f1d1d;">
+                    {{ req.status|upper }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: #666; padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+        You haven't sent any contact requests yet. <a href="/browse">Browse items</a> to connect!
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<footer style="background: linear-gradient(90deg, #1f2937 0%, #111827 100%); border-top: 2px solid rgba(37, 99, 235, 0.4); color: #fff; text-align: center; padding: 2rem; margin-top: 3rem;">
+  <p>&copy; 2026 ReUnite - Lost & Found Portal. All rights reserved.</p>
+</footer>
+
+<style>
+  .btn-secondary {
+    background: #ef4444;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+  }
+  
+  .btn-secondary:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+  }
+</style>
+
+</body>
+</html>
+

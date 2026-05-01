@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Claims - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') %}
+        <li><a href="/admin" class="btn-nav">⚙️ Admin Dashboard</a></li>
+        <li><a href="/logout" class="btn-logout">Logout</a></li>
+      {% else %}
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/report">➕ Report Item</a></li>
+            <li><a href="/my-items">🧳 My Items</a></li>
+            <li><a href="/matches">🔄 Matches</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-claims">📋 My Claims</a></li>
+            <li><a href="/notifications">🔔 Notifications</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-chats">💬 Chats</a></li>
+            <li><a href="/contact-admin">📧 Contact Admin</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+          </ul>
+        </li>
+      {% endif %}
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="page-content">
+  <h1>🛡️ My Claims</h1>
+  <p style="color:var(--text-muted); margin-bottom:2rem;">Track your item claims and their status</p>
+
+  {% if claims %}
+    <div class="grid-2">
+      {% for claim_item in claims %}
+        <div class="card" {% if claim_item.claim.status == 'verified' %}style="border-left: 4px solid #10b981;"{% endif %}>
+          {% if claim_item.item and claim_item.item.image %}
+            <img src="/static/uploads/{{ claim_item.item.image }}" alt="{{ claim_item.claim.item_name }}" class="card-image">
+          {% else %}
+            <div style="width:100%; height:200px; background:#e5e7eb; display:flex; align-items:center; justify-content:center; font-size:3rem;">📦</div>
+          {% endif %}
+          
+          <div class="card-body">
+            <div style="margin-bottom:1rem;">
+              <h3 class="card-title">{{ claim_item.claim.item_name }}</h3>
+              {% if claim_item.item %}
+                <p class="card-meta">📂 {{ claim_item.item.category }} • 📍 {{ claim_item.item.location }}</p>
+              {% endif %}
+            </div>
+
+            <!-- YOUR PROOF -->
+            <div style="background:#f9fafb; padding:1rem; border-radius:0.5rem; margin-bottom:1rem;">
+              <strong style="display:block; margin-bottom:0.5rem;">📝 Your Proof of Ownership:</strong>
+              <p style="color:var(--text-muted); font-size:0.9rem; margin:0;">{{ claim_item.claim.proof }}</p>
+            </div>
+
+            <!-- STATUS -->
+            <div style="margin-bottom:1rem;">
+              <strong>Status:</strong>
+              <p style="margin-top:0.5rem;">
+                {% if claim_item.claim.status == 'pending' %}
+                  <span style="background:#fef3c7; color:#78350f; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:600; font-size:0.9rem;">⏳ Pending Admin Review</span>
+                {% elif claim_item.claim.status == 'verified' %}
+                  <span style="background:#d1fae5; color:#065f46; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:600; font-size:0.9rem;">✅ VERIFIED - Contact Owner!</span>
+                {% else %}
+                  <span style="background:#fee2e2; color:#991b1b; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:600; font-size:0.9rem;">❌ Rejected</span>
+                {% endif %}
+              </p>
+            </div>
+
+            <!-- OWNER INFO (When Verified) -->
+            {% if claim_item.claim.status == 'verified' %}
+              <div style="background:#f0f9ff; border-left: 3px solid #06b6d4; padding:1rem; margin-bottom:1rem; border-radius:0.5rem;">
+                <strong style="display:block; margin-bottom:0.5rem;">👤 Item Owner (Contact to Arrange Pickup):</strong>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin:0;">
+                  <strong>{{ claim_item.claim.item_owner_name }}</strong>
+                </p>
+              </div>
+
+              <!-- ACTION BUTTONS FOR VERIFIED CLAIMS -->
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                {% if claim_item.claim.chat_room_id %}
+                  <a href="/chat/{{ claim_item.claim.chat_room_id }}" class="btn btn-success" style="width:100%; text-align:center; padding:0.7rem; font-size:0.9rem;">
+                    💬 Open Chat
+                  </a>
+                {% else %}
+                  <form method="POST" action="/contact-owner-with-proof/{{ claim_item.claim._id }}" style="margin:0; max-width:none; padding:0; background:transparent; box-shadow:none;">
+                    <button type="submit" class="btn btn-success" style="width:100%; padding:0.7rem; font-size:0.9rem;">
+                      💬 Contact Owner
+                    </button>
+                  </form>
+                {% endif %}
+                {% if claim_item.item %}
+                  <a href="/item/{{ claim_item.item._id }}" class="btn btn-primary" style="width:100%; text-align:center; padding:0.7rem; font-size:0.9rem;">
+                    📋 View Item
+                  </a>
+                {% endif %}
+              </div>
+            {% elif claim_item.claim.status == 'pending' %}
+              <p class="card-meta" style="font-size:0.85rem; color: #f59e0b; margin-top:1rem;">
+                ⏳ Admin is reviewing your claim. This might take a few hours.
+              </p>
+            {% endif %}
+
+            <p class="card-meta" style="font-size:0.85rem; margin-top:1rem;">
+              Claimed: {{ claim_item.claim.created_at.strftime('%d %B %Y') }}
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align:center; padding:3rem; background:white; border-radius:1rem; box-shadow: var(--shadow-md);">
+      <p style="font-size:1.2rem; color:var(--text-muted); margin-bottom:1rem;">You haven't made any claims yet.</p>
+      <p style="color:var(--text-muted); margin-bottom:2rem;">Browse items and claim the ones that belong to you!</p>
+      <a href="/browse" class="btn btn-primary">Browse Items</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
+

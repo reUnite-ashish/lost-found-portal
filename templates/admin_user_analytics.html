@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Analytics</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="nav-logo">ReUnite Portal</a>
+      <div class="nav-links">
+        <a href="/admin">Back to Dashboard</a>
+        <a href="/logout" class="btn btn-logout">Logout</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main style="max-width:1100px; margin:2rem auto; padding:0 1rem;">
+  <h2 style="margin-bottom:.5rem;">User Analytics</h2>
+  <p style="color:var(--text-muted); margin-bottom:1rem;">
+    {{ user.username }}{% if user.email %} ({{ user.email }}){% endif %}
+  </p>
+
+  <div class="stats-bar" style="margin-bottom:1.5rem;">
+    <div class="stat-item">
+      <div class="stat-number">{{ analytics.total_items }}</div>
+      <div class="stat-label">Total Items</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ analytics.total_claims }}</div>
+      <div class="stat-label">Total Claims</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ analytics.approved_claims }}</div>
+      <div class="stat-label">Approved Claims</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ analytics.success_rate|round(1) }}%</div>
+      <div class="stat-label">Success Rate</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem;">
+    <div class="card" style="padding:1rem;">
+      <h3>Account Metrics</h3>
+      <p><strong>Lost reports:</strong> {{ analytics.lost_items }}</p>
+      <p><strong>Found reports:</strong> {{ analytics.found_items }}</p>
+      <p><strong>Unread notifications:</strong> {{ analytics.unread_notifications }}</p>
+      <p><strong>Recent activity (30d):</strong> {{ analytics.recent_activity }}</p>
+      <p><strong>Account age:</strong> {{ analytics.account_age_days }} days</p>
+    </div>
+
+    <div class="card" style="padding:1rem;">
+      <h3>Recent Items</h3>
+      {% if recent_items %}
+        <ul style="margin-left:1rem;">
+          {% for item in recent_items %}
+            <li>
+              <a href="/item/{{ item._id }}">{{ item.name }}</a>
+              - {{ item.type }} - {{ item.category }}
+              {% if item.created_at %}({{ item.created_at.strftime('%d-%m-%Y') }}){% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p style="color:var(--text-muted);">No recent items.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card" style="padding:1rem; margin-top:1rem;">
+    <h3>Recent Claims</h3>
+    {% if recent_claims %}
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--bg-light);">
+              <th style="padding:.75rem; text-align:left;">Item</th>
+              <th style="padding:.75rem; text-align:left;">Status</th>
+              <th style="padding:.75rem; text-align:left;">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for claim in recent_claims %}
+            <tr style="border-top:1px solid var(--border-color);">
+              <td style="padding:.75rem;">{{ claim.item_name or claim.item_id }}</td>
+              <td style="padding:.75rem;">{{ claim.status }}</td>
+              <td style="padding:.75rem;">{% if claim.created_at %}{{ claim.created_at.strftime('%d-%m-%Y') }}{% else %}-{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color:var(--text-muted);">No recent claims.</p>
+    {% endif %}
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 ReUnite Portal.</p>
+</footer>
+<script src="/static/script.js"></script>
+</body>
+</html>
+

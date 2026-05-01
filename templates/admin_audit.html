@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Logs</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📋</div>
+    ReUnite Admin
+  </a>
+  <ul class="navbar-links">
+    <li><a href="/admin">Back to Dashboard</a></li>
+    <li><a href="/logout" class="btn btn-logout">Logout</a></li>
+  </ul>
+</nav>
+
+<main class="page-content">
+  <h2 style="margin-bottom:1rem;">Admin Audit Logs</h2>
+
+  <div class="card" style="padding:1rem;">
+    {% if logs %}
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--bg-light);">
+              <th style="padding:.75rem; text-align:left;">Timestamp</th>
+              <th style="padding:.75rem; text-align:left;">Admin</th>
+              <th style="padding:.75rem; text-align:left;">Action</th>
+              <th style="padding:.75rem; text-align:left;">Details</th>
+              <th style="padding:.75rem; text-align:left;">IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr style="border-top:1px solid var(--border-color);">
+              <td style="padding:.75rem;">{% if log.timestamp %}{{ log.timestamp.strftime('%d-%m-%Y %H:%M:%S') }}{% else %}-{% endif %}</td>
+              <td style="padding:.75rem;">{{ log.admin_username }}</td>
+              <td style="padding:.75rem;">{{ log.action }}</td>
+              <td style="padding:.75rem;">{{ log.details }}</td>
+              <td style="padding:.75rem;">{{ log.ip_address or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+        <span style="color:var(--text-muted);">Page {{ page }} of {{ total_pages }}</span>
+        <div style="display:flex; gap:.5rem;">
+          {% if page > 1 %}
+          <a class="btn btn-secondary" href="/admin/audit-logs?page={{ page - 1 }}">Previous</a>
+          {% endif %}
+          {% if page < total_pages %}
+          <a class="btn btn-secondary" href="/admin/audit-logs?page={{ page + 1 }}">Next</a>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <p style="color:var(--text-muted);">No audit logs available.</p>
+    {% endif %}
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 ReUnite Portal.</p>
+</footer>
+<script src="/static/script.js"></script>
+</body>
+</html>
+

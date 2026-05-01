@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Item - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') %}
+        <li><a href="/admin" class="btn-nav">⚙️ Admin Dashboard</a></li>
+        <li><a href="/logout" class="btn-logout">Logout</a></li>
+      {% else %}
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/report">➕ Report Item</a></li>
+            <li><a href="/my-items">🧳 My Items</a></li>
+            <li><a href="/matches">🔄 Matches</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-claims">📋 My Claims</a></li>
+            <li><a href="/notifications">🔔 Notifications</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-chats">💬 Chats</a></li>
+            <li><a href="/contact-admin">📧 Contact Admin</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+          </ul>
+        </li>
+      {% endif %}
+    {% else %}
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/register" class="btn-nav">Sign up</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+
+
+<div class="page-content" style="max-width:600px; margin:2.5rem auto 0 auto;">
+  <h1 style="font-size:2rem; font-weight:800; margin-bottom:0.2rem; text-align:left;">
+    <span style="font-size:1.7rem; vertical-align:middle;">📝</span> Report an Item
+  </h1>
+  <div style="color:var(--text-muted); margin-bottom:2.2rem;">Fill out the details below. Our system will automatically check for matches.</div>
+  <div class="card card-body" style="padding:2.2rem 2rem 2rem 2rem;">
+    <form method="POST" enctype="multipart/form-data" id="reportForm">
+      <!-- Tab-style selector -->
+      <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
+        <button type="button" id="tab-lost" class="tab-btn active" onclick="selectType('lost')">🥲 I lost something</button>
+        <button type="button" id="tab-found" class="tab-btn" onclick="selectType('found')">😊 I found something</button>
+        <input type="hidden" id="type" name="type" value="lost">
+      </div>
+      <div style="display:flex; gap:1.2rem; margin-bottom:1.2rem;">
+        <div style="flex:1;">
+          <label for="name">Item Name<span style="color:#ef4444;"> *</span></label>
+          <input type="text" id="name" name="name" required placeholder="e.g. iPhone 17 Black">
+        </div>
+        <div style="flex:1;">
+          <label for="category">Category<span style="color:#ef4444;"> *</span></label>
+          <select id="category" name="category" required>
+            <option value="">Select a category</option>
+            <option value="Mobile">Mobile Phone</option>
+            <option value="Purse">Wallet/Purse</option>
+            <option value="ID Card">ID Card/Documents</option>
+            <option value="Government Documents">Government Documents</option>
+            <option value="Jewelry">Jewelry</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Keys">Keys</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; gap:1.2rem; margin-bottom:1.2rem;">
+        <div style="flex:1;">
+          <label for="location">Location<span style="color:#ef4444;"> *</span></label>
+          <input type="text" id="location" name="location" required placeholder="Where was it lost/found?">
+        </div>
+        <div style="flex:1;">
+          <label for="datetime">Date & Time</label>
+          <input type="datetime-local" id="datetime" name="datetime">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:1.2rem;">
+        <label for="description">Description (Be detailed)</label>
+        <textarea id="description" name="description" placeholder="Color, brand, unique marks, contents, serial number..."></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:1.5rem;">
+        <label>Image (Optional but recommended)</label>
+        <div id="image-upload-area" style="border:2px dashed #e5e7eb; border-radius:0.7rem; background:#f8fafc; padding:2rem; text-align:center; cursor:pointer;">
+          <input type="file" id="image" name="image" accept="image/*" style="display:none;">
+          <div id="image-upload-label" style="color:#64748b; font-size:1.1rem;">
+            <div style="font-size:2.2rem; margin-bottom:0.5rem;">📤</div>
+            Click to upload image<br><span style="font-size:0.95rem; color:#94a3b8;">PNG, JPG up to 5MB</span>
+          </div>
+          <img id="image-preview" style="display:none; max-width:100%; margin-top:1rem; border-radius:0.5rem;">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; font-size:1.1rem; background:#2563eb;">Submit Report</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// Tab selector logic
+function selectType(type) {
+  document.getElementById('type').value = type;
+  document.getElementById('tab-lost').classList.remove('active');
+  document.getElementById('tab-found').classList.remove('active');
+  if(type === 'lost') {
+    document.getElementById('tab-lost').classList.add('active');
+  } else {
+    document.getElementById('tab-found').classList.add('active');
+  }
+}
+// Image upload area logic
+const uploadArea = document.getElementById('image-upload-area');
+const fileInput = document.getElementById('image');
+const previewImg = document.getElementById('image-preview');
+const uploadLabel = document.getElementById('image-upload-label');
+if(uploadArea && fileInput) {
+  uploadArea.onclick = () => fileInput.click();
+  fileInput.onchange = () => {
+    if(fileInput.files && fileInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+        uploadLabel.style.display = 'none';
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    }
+  };
+}
+</script>
+
+<style>
+.tab-btn {
+  flex:1;
+  padding: 0.9rem 0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.7rem;
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+.tab-btn:not(.active):hover {
+  background: #f1f5f9;
+}
+</style>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
+

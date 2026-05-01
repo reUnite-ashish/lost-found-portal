@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Found Item - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') %}
+        <li><a href="/admin" class="btn-nav">⚙️ Admin Dashboard</a></li>
+        <li><a href="/logout" class="btn-logout">Logout</a></li>
+      {% else %}
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/report">➕ Report Item</a></li>
+            <li><a href="/my-items">🧳 My Items</a></li>
+            <li><a href="/matches">🔄 Matches</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-claims">📋 My Claims</a></li>
+            <li><a href="/notifications">🔔 Notifications</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-chats">💬 Chats</a></li>
+            <li><a href="/contact-admin">📧 Contact Admin</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+          </ul>
+        </li>
+      {% endif %}
+    {% else %}
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/register" class="btn-nav">Sign up</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="page-content">
+  <a href="/item/{{ item._id }}" class="btn btn-outline" style="margin-bottom: 2rem;">← Back to Item</a>
+
+  <div class="grid-2">
+    <!-- ITEM INFO -->
+    <div>
+      {% if item.image %}
+        <img src="/static/uploads/{{ item.image }}" alt="{{ item.name }}" style="width:100%; border-radius:1rem; box-shadow: var(--shadow-lg); margin-bottom:1rem;">
+      {% else %}
+        <div style="width:100%; height:400px; background:#e5e7eb; display:flex; align-items:center; justify-content:center; font-size:5rem; border-radius:1rem; margin-bottom:1rem;">📦</div>
+      {% endif %}
+
+      <div class="card card-body">
+        <h3>{{ item.name }}</h3>
+        <p><strong>Category:</strong> {{ item.category }}</p>
+        <p><strong>Location Lost:</strong> {{ item.location }}</p>
+        <p><strong>Description:</strong> {{ item.description }}</p>
+        <p><strong>Reported by:</strong> {{ item.reporter_name }}</p>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div>
+      <h2>🔍 Report Finding This Item</h2>
+      <p style="color:#666; margin-bottom:1.5rem;">Help reunite this item with its owner by providing details about where and when you found it.</p>
+
+      <form method="POST" class="form">
+        <div class="form-group">
+          <label for="location-found">Where did you find it?</label>
+          <input 
+            type="text" 
+            id="location-found" 
+            name="location_found" 
+            required 
+            placeholder="e.g., Market Street near Delhi Gate"
+            style="width:100%; padding:0.75rem; border:1px solid #e5e7eb; border-radius:0.5rem; font-size:1rem;">
+        </div>
+
+        <div class="form-group">
+          <label for="description">Condition & Details</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            required 
+            placeholder="Describe the condition, location of the item, any damage, etc."
+            style="width:100%; padding:0.75rem; border:1px solid #e5e7eb; border-radius:0.5rem; font-size:1rem; min-height:120px; resize:vertical;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="contact-info">Your Contact Info</label>
+          <input 
+            type="text" 
+            id="contact-info" 
+            name="contact_info" 
+            required 
+            placeholder="Phone number or email for owner to contact you"
+            style="width:100%; padding:0.75rem; border:1px solid #e5e7eb; border-radius:0.5rem; font-size:1rem;">
+          <small style="color:#666;">Admin will verify & only share contact with the actual item owner.</small>
+        </div>
+
+        <div style="background:#f0f9ff; border-left:4px solid #06b6d4; padding:1rem; border-radius:0.5rem; margin-bottom:1.5rem;">
+          <strong>ℹ️ How it works:</strong>
+          <ul style="margin:0.5rem 0 0 1.5rem; color:#666;">
+            <li>You'll submit your report</li>
+            <li>Admin will verify your report is legitimate</li>
+            <li>If verified, the item owner will be contacted with YOUR details</li>
+            <li>You'll help reunite someone with their lost item! 🎉</li>
+          </ul>
+        </div>
+
+        <button type="submit" class="btn btn-success" style="width:100%; padding:1rem; font-size:1.05rem;">✅ Submit Report</button>
+        <a href="/browse" class="btn" style="width:100%; padding:1rem; font-size:1.05rem; text-align:center; background:#ccc; color:#333; margin-top:0.5rem; display:block;">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer style="background: linear-gradient(90deg, #1f2937 0%, #111827 100%); border-top: 2px solid rgba(37, 99, 235, 0.4); color: #fff; text-align: center; padding: 2rem; margin-top: 3rem;">
+  <p>&copy; 2026 ReUnite - Lost & Found Portal. All rights reserved.</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .chat-wrapper {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .chat-header {
+      background: linear-gradient(90deg, #1e3a8a, #2563eb);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 1rem 1rem 0 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .chat-header h2 { margin: 0; font-size: 1.1rem; color: white; }
+    .chat-header .meta { font-size: 0.85rem; opacity: 0.8; }
+    .chat-box {
+      background: white;
+      border: 1px solid #e5e7eb;
+      min-height: 400px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .msg-row { display: flex; }
+    .msg-row.mine { justify-content: flex-end; }
+    .msg-bubble {
+      max-width: 70%;
+      padding: 0.6rem 1rem;
+      border-radius: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .msg-row.mine .msg-bubble {
+      background: #2563eb;
+      color: white;
+      border-bottom-right-radius: 0.2rem;
+    }
+    .msg-row:not(.mine) .msg-bubble {
+      background: #f3f4f6;
+      color: #1f2937;
+      border-bottom-left-radius: 0.2rem;
+    }
+    .msg-meta {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .msg-row.mine .msg-meta { text-align: right; }
+    .chat-input-area {
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      border-radius: 0 0 1rem 1rem;
+      background: #f9fafb;
+      padding: 1rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .chat-input-area input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 2rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+    }
+    .chat-input-area input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .no-messages {
+      text-align: center;
+      color: #9ca3af;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      <li class="nav-dropdown">
+        <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+        <ul class="nav-drop-menu">
+          <li><a href="/report">➕ Report Item</a></li>
+          <li><a href="/my-items">🧳 My Items</a></li>
+        </ul>
+      </li>
+      <li class="nav-dropdown">
+        <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+        <ul class="nav-drop-menu">
+          <li><a href="/my-claims">📋 My Claims</a></li>
+          <li><a href="/notifications">🔔 Notifications</a></li>
+        </ul>
+      </li>
+      <li class="nav-dropdown">
+        <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+        <ul class="nav-drop-menu">
+          <li><a href="/my-chats">💬 Chats</a></li>
+          <li><a href="/contact-admin">📧 Contact Admin</a></li>
+        </ul>
+      </li>
+      <li class="nav-dropdown">
+        <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+        <ul class="nav-drop-menu">
+          <li><a href="/profile">👤 Profile</a></li>
+          <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+        </ul>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH -->
+<div style="max-width:800px; margin:0 auto; padding:0 1rem;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="chat-wrapper">
+  <!-- Info bar -->
+  <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:0.75rem; padding:0.75rem 1.25rem; margin-bottom:1rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+    <span style="color:#0369a1; font-weight:600;">📦 {{ room.item_name }}</span>
+    <span style="color:#64748b;">Chatting with: <strong>{{ other_user_name }}</strong></span>
+    <a href="/my-claims" style="margin-left:auto; color:#2563eb; font-size:0.9rem;">← Back to My Claims</a>
+  </div>
+
+  <!-- Chat header -->
+  <div class="chat-header">
+    <span style="font-size:1.5rem;">💬</span>
+    <div>
+      <h2>Chat with {{ other_user_name }}</h2>
+      <div class="meta">About: {{ room.item_name }}</div>
+    </div>
+  </div>
+
+  <!-- Messages box -->
+  <div class="chat-box" id="chatBox">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="msg-row {% if msg.sender_id == session.user_id %}mine{% endif %}">
+          <div>
+            <div class="msg-bubble">{{ msg.message }}</div>
+            <div class="msg-meta">
+              {{ msg.sender_name }} &bull;
+              {{ msg.timestamp.strftime('%d %b, %H:%M') if msg.timestamp else '' }}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-messages">
+        <p style="font-size:2rem;">👋</p>
+        <p>No messages yet. Say hello!</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Input -->
+  <form method="POST" action="/chat/{{ room_id }}/send" class="chat-input-area" id="chatForm" style="margin:0; max-width:none; padding:1rem; background:#f9fafb; box-shadow:none; border:1px solid #e5e7eb; border-top:none; border-radius:0 0 1rem 1rem;">
+    <input type="text" name="message" id="msgInput" placeholder="Type a message…" autocomplete="off" required>
+    <button type="submit" class="btn btn-primary" style="padding:0.75rem 1.5rem; border-radius:2rem; white-space:nowrap;">Send ➤</button>
+  </form>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+
+<script>
+  // Auto scroll to bottom on load
+  const chatBox = document.getElementById('chatBox');
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Poll for new messages every 5 seconds
+  const roomId = "{{ room_id }}";
+  const myUserId = "{{ session.user_id }}";
+
+  function loadMessages() {
+    fetch(`/chat/${roomId}/messages`)
+      .then(r => r.json())
+      .then(msgs => {
+        if (!Array.isArray(msgs)) return;
+        chatBox.innerHTML = '';
+        if (msgs.length === 0) {
+          chatBox.innerHTML = '<div class="no-messages"><p style="font-size:2rem;">👋</p><p>No messages yet. Say hello!</p></div>';
+          return;
+        }
+        msgs.forEach(m => {
+          const row = document.createElement('div');
+          row.className = 'msg-row' + (m.is_mine ? ' mine' : '');
+          row.innerHTML = `<div>
+            <div class="msg-bubble">${escapeHtml(m.message)}</div>
+            <div class="msg-meta">${escapeHtml(m.sender_name)} &bull; ${m.timestamp}</div>
+          </div>`;
+          chatBox.appendChild(row);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }).catch(() => {});
+  }
+
+  function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(text));
+    return d.innerHTML;
+  }
+
+  // Poll every 5 seconds
+  setInterval(loadMessages, 5000);
+
+  // On form submit, clear input and scroll
+  document.getElementById('chatForm').addEventListener('submit', function() {
+    setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 300);
+  });
+</script>
+</body>
+</html>
+

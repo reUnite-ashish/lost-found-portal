@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/register">Sign Up</a></li>
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="page-content">
+  <h1 style="text-align:center; margin-top:2rem;">Welcome Back!</h1>
+  
+  <form method="POST" id="loginForm">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required placeholder="Enter your username">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required placeholder="Enter your password">
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%; font-size:1.1rem;">Log In</button>
+
+    <p style="text-align:center; margin-top:1.5rem;">
+      Don't have an account? <a href="/register">Sign up here</a>
+    </p>
+  </form>
+
+  {% if banned %}
+  <div style="max-width:500px; margin:1rem auto; background:#fee2e2; border:1px solid #fca5a5; border-radius:0.75rem; padding:1.5rem; text-align:center;">
+    <p style="color:#991b1b; font-weight:600; font-size:1rem; margin-bottom:0.75rem;">⛔ Your account is banned</p>
+    <p style="color:#7f1d1d; font-size:0.95rem; margin-bottom:1rem;">If you think this is a mistake, contact the admin.</p>
+    <a href="/contact-admin" class="btn btn-danger" style="display:inline-block;">📧 Contact Admin</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
+

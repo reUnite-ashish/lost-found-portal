@@ -1,0 +1,513 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite Admin
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    <li><a href="/logout">Logout ({{ session.get('username', 'Admin') }})</a></li>
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="page-content">
+  <h1>👨‍💻 Admin Dashboard</h1>
+
+  <!-- STATS -->
+  <div class="stats-bar" style="margin-bottom:3rem;">
+    <div class="stat-item">
+      <div class="stat-number">{{ items|length }}</div>
+      <div class="stat-label">Total Items</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ claims|length }}</div>
+      <div class="stat-label">Total Claims</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ users|length }}</div>
+      <div class="stat-label">Registered Users</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ stats.success_rate|round(1) }}%</div>
+      <div class="stat-label">Success Rate</div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div style="background: var(--bg-light); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 1rem;">⚡ Quick Actions</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+
+      <!-- Send Notification -->
+      <button type="button" onclick="showModal('notificationModal')" class="btn btn-primary" style="padding: 1rem;">
+        📧 Send Notification
+      </button>
+
+      <!-- Bulk Approve Claims -->
+      <button type="button" onclick="showModal('bulkApproveModal')" class="btn btn-success" style="padding: 1rem;">
+        ✅ Bulk Approve Claims
+      </button>
+
+      <!-- Search -->
+      <a href="/admin/search" class="btn btn-info" style="padding: 1rem; text-align: center; text-decoration: none;">
+        🔍 Advanced Search
+      </a>
+
+      <!-- Export Data -->
+      <button type="button" onclick="showModal('exportModal')" class="btn btn-warning" style="padding: 1rem;">
+        📊 Export Data
+      </button>
+
+      <!-- System Backup -->
+      <a href="/admin/backup" class="btn btn-secondary" style="padding: 1rem; text-align: center; text-decoration: none;" onclick="return confirm('Create system backup?')">
+        💾 Create Backup
+      </a>
+
+      <!-- Audit Logs -->
+      <a href="/admin/audit-logs" class="btn btn-dark" style="padding: 1rem; text-align: center; text-decoration: none;">
+        📋 Audit Logs
+      </a>
+
+      <!-- Contact Messages -->
+      <a href="/admin/messages" class="btn btn-contact" style="padding: 1rem; text-align: center; text-decoration: none;">
+        📧 User Messages
+      </a>
+
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div style="display:flex; gap:1rem; border-bottom:2px solid var(--border-color); margin-bottom:2rem; flex-wrap:wrap;">
+    <button type="button" onclick="showTab('items')" id="itemsTab" class="tab-btn" style="padding:1rem; border:none; background:none; cursor:pointer; font-size:1rem; font-weight:600; border-bottom:3px solid var(--primary-color);">📦 All Items</button>
+    <button type="button" onclick="showTab('users')" id="usersTab" class="tab-btn" style="padding:1rem; border:none; background:none; cursor:pointer; font-size:1rem; font-weight:600; border-bottom:3px solid transparent; color:var(--text-muted);">👥 Users</button>
+    <button type="button" onclick="showTab('found-matches')" id="foundMatchesTab" class="tab-btn" style="padding:1rem; border:none; background:none; cursor:pointer; font-size:1rem; font-weight:600; border-bottom:3px solid transparent; color:var(--text-muted);">🔍 Found Reports</button>
+    <button type="button" onclick="showTab('claims')" id="claimsTab" class="tab-btn" style="padding:1rem; border:none; background:none; cursor:pointer; font-size:1rem; font-weight:600; border-bottom:3px solid transparent; color:var(--text-muted);">🛡️ Claims</button>
+    <button type="button" onclick="showTab('analytics')" id="analyticsTab" class="tab-btn" style="padding:1rem; border:none; background:none; cursor:pointer; font-size:1rem; font-weight:600; border-bottom:3px solid transparent; color:var(--text-muted);">📊 Analytics</button>
+  </div>
+
+  <!-- ITEMS TAB -->
+  <div id="itemsTab-content" class="tab-content">
+    {% if items %}
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--bg-light); border-bottom:2px solid var(--border-color);">
+              <th style="padding:1rem; text-align:left;">Item Name</th>
+              <th style="padding:1rem; text-align:left;">Type</th>
+              <th style="padding:1rem; text-align:left;">Category</th>
+              <th style="padding:1rem; text-align:left;">Reporter</th>
+              <th style="padding:1rem; text-align:left;">Status</th>
+              <th style="padding:1rem; text-align:left;">Date</th>
+              <th style="padding:1rem; text-align:center;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr style="border-bottom:1px solid var(--border-color);">
+                <td style="padding:1rem;"><strong>{{ item.name }}</strong></td>
+                <td style="padding:1rem;">
+                  {% if item.type == 'lost' %}
+                    <span style="background:#fee2e2; color:#991b1b; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">LOST</span>
+                  {% else %}
+                    <span style="background:#d1fae5; color:#065f46; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">FOUND</span>
+                  {% endif %}
+                </td>
+                <td style="padding:1rem;">{{ item.category }}</td>
+                <td style="padding:1rem;">{{ item.reporter_name }}</td>
+                <td style="padding:1rem;">
+                  {% if item.status == 'active' %}
+                    <span style="background:#d1fae5; color:#065f46; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">Active</span>
+                  {% else %}
+                    <span style="background:#fef3c7; color:#78350f; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">Claimed</span>
+                  {% endif %}
+                </td>
+                <td style="padding:1rem;">{{ item.created_at.strftime('%d-%m-%Y') }}</td>
+                <td style="padding:1rem; text-align:center;">
+                  <form method="POST" action="/admin/delete-item/{{ item._id }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this item?')">
+                    <button type="submit" class="btn btn-danger btn-sm" style="padding:0.25rem 0.5rem; font-size:0.8rem;">🗑️ Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="text-align:center; color:var(--text-muted); padding:2rem;">No items reported yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- FOUND MATCHES TAB -->
+  <div id="foundMatchesTab-content" class="tab-content" style="display:none;">
+    {% if found_matches %}
+      <div class="grid-2">
+        {% for match in found_matches %}
+          <div class="card card-body" style="border-left:4px solid #10b981;">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div>
+                <h4 style="margin-bottom:0.5rem;">🔍 Found Report</h4>
+                <p class="card-meta"><strong>Lost Item ID:</strong> {{ match.lost_item_id }}</p>
+                <p class="card-meta"><strong>Finder:</strong> {{ match.finder_name }}</p>
+                <p class="card-meta"><strong>Contact:</strong> {{ match.finder_contact }}</p>
+                <p class="card-meta"><strong>Found At:</strong> {{ match.location_found }}</p>
+                <p class="card-meta"><strong>Reported:</strong> {{ match.created_at.strftime('%d-%m-%Y %H:%M') }}</p>
+              </div>
+              <span 
+                {% if match.status == 'pending' %}
+                  style="background:#fef3c7; color:#78350f; padding:0.5rem 1rem; border-radius:0.5rem; font-size:0.8rem; font-weight:600; white-space:nowrap;"
+                {% elif match.status == 'verified' %}
+                  style="background:#d1fae5; color:#065f46; padding:0.5rem 1rem; border-radius:0.5rem; font-size:0.8rem; font-weight:600; white-space:nowrap;"
+                {% else %}
+                  style="background:#fee2e2; color:#991b1b; padding:0.5rem 1rem; border-radius:0.5rem; font-size:0.8rem; font-weight:600; white-space:nowrap;"
+                {% endif %}
+              >
+                {{ match.status|upper }}
+              </span>
+            </div>
+
+            <div style="background:var(--bg-light); padding:1rem; border-radius:0.5rem; margin:1rem 0;">
+              <strong>📝 Details:</strong>
+              <p>{{ match.description }}</p>
+            </div>
+
+            {% if match.status == 'pending' %}
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-top:1rem;">
+                <form method="POST" action="/admin/verify-found-match/{{ match._id }}" style="margin:0;">
+                  <input type="hidden" name="action" value="approve">
+                  <button type="submit" class="btn btn-success" style="width:100%; padding:0.75rem;">✓ Approve</button>
+                </form>
+                <form method="POST" action="/admin/verify-found-match/{{ match._id }}" style="margin:0;">
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="btn btn-danger" style="width:100%; padding:0.75rem;">✗ Reject</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="text-align:center; color:var(--text-muted); padding:2rem;">No found reports yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- CLAIMS TAB -->
+  <div id="claimsTab-content" class="tab-content" style="display:none;">
+    {% if claims %}
+      <div class="grid-2">
+        {% for claim in claims %}
+          <div class="card card-body">
+            <h4 style="margin-bottom:0.5rem;">Item ID: {{ claim.item_id }}</h4>
+            <p class="card-meta"><strong>Claimant:</strong> {{ claim.claimant_name }}</p>
+            <p class="card-meta"><strong>Claimed:</strong> {{ claim.created_at.strftime('%d-%m-%Y') }}</p>
+            
+            <div style="background:var(--bg-light); padding:1rem; border-radius:0.5rem; margin:1rem 0;">
+              <strong>📝 Proof of Ownership:</strong>
+              <p>{{ claim.proof }}</p>
+            </div>
+
+            <p class="card-meta">
+              <strong>Status:</strong>
+              {% if claim.status == 'pending' %}
+                <span style="background:#fef3c7; color:#78350f; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">PENDING</span>
+              {% elif claim.status == 'verified' %}
+                <span style="background:#d1fae5; color:#065f46; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">VERIFIED</span>
+              {% else %}
+                <span style="background:#fee2e2; color:#991b1b; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem;">REJECTED</span>
+              {% endif %}
+            </p>
+
+            {% if claim.status == 'pending' %}
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-top:1rem;">
+                <form method="POST" action="/admin/verify-claim/{{ claim._id }}" style="margin:0;">
+                  <input type="hidden" name="action" value="approve">
+                  <button type="submit" class="btn btn-success" style="width:100%; padding:0.75rem;">✓ Approve</button>
+                </form>
+                <form method="POST" action="/admin/verify-claim/{{ claim._id }}" style="margin:0;">
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="btn btn-danger" style="width:100%; padding:0.75rem;">✗ Reject</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="text-align:center; color:var(--text-muted); padding:2rem;">No pending claims.</p>
+    {% endif %}
+  </div>
+
+  <!-- USERS TAB -->
+  <div id="usersTab-content" class="tab-content" style="display:none;">
+    {% if users %}
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--bg-light); border-bottom:2px solid var(--border-color);">
+              <th style="padding:1rem; text-align:left;">Username</th>
+              <th style="padding:1rem; text-align:left;">Email</th>
+              <th style="padding:1rem; text-align:left;">Role</th>
+              <th style="padding:1rem; text-align:left;">Joined</th>
+              <th style="padding:1rem; text-align:left;">Items Reported</th>
+              <th style="padding:1rem; text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+              <tr style="border-bottom:1px solid var(--border-color);">
+                <td style="padding:1rem;"><strong>{{ user.username }}</strong></td>
+                <td style="padding:1rem;">{{ user.email }}</td>
+                <td style="padding:1rem;">
+                  {% if user.is_admin %}
+                    <span style="background:#fef3c7; color:#78350f; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem; font-weight:600;">ADMIN</span>
+                  {% else %}
+                    <span style="background:#e0e7ff; color:#3730a3; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.8rem; font-weight:600;">USER</span>
+                  {% endif %}
+                </td>
+                <td style="padding:1rem;">{{ user.created_at.strftime('%d-%m-%Y') if user.created_at else 'N/A' }}</td>
+                <td style="padding:1rem;">{{ user.item_count or 0 }}</td>
+                <td style="padding:1rem; text-align:center; white-space:nowrap;">
+                  {% if not user.is_admin %}
+                  <form method="POST" action="/admin/toggle-user-status/{{ user._id }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.5rem; font-size:0.8rem;">
+                      {% if user.is_active|default(true) %}🚫 Ban{% else %}✅ Unban{% endif %}
+                    </button>
+                  </form>
+                  {% endif %}
+                  <form method="POST" action="/admin/message-user/{{ user._id }}" style="display:inline; margin-left:0.25rem;">
+                    <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.5rem; font-size:0.8rem; background:#3b82f6; color:#fff; border-color:#3b82f6;">
+                      💬 Message
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="text-align:center; color:var(--text-muted); padding:2rem;">No users found.</p>
+    {% endif %}
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div id="analyticsTab-content" class="tab-content" style="display:none;">
+    <div class="grid-2" style="margin-bottom:2rem;">
+      <div class="card card-body">
+        <h3 style="margin-bottom:1rem;">📈 Item Statistics</h3>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span>Lost Items:</span>
+          <strong>{{ stats.lost_count or 0 }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span>Found Items:</span>
+          <strong>{{ stats.found_count or 0 }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span>Active Items:</span>
+          <strong>{{ stats.active_count or 0 }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Resolved Items:</span>
+          <strong>{{ stats.resolved_count or 0 }}</strong>
+        </div>
+      </div>
+
+      <div class="card card-body">
+        <h3 style="margin-bottom:1rem;">👥 User Activity</h3>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span>Total Users:</span>
+          <strong>{{ users|length }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span>Active Users:</span>
+          <strong>{{ stats.active_users or 0 }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span>Items per User:</span>
+          <strong>{{ "%.1f"|format(stats.avg_items_per_user or 0) }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Success Rate:</span>
+          <strong>{{ "%.1f"|format(stats.success_rate or 0) }}%</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-body">
+      <h3 style="margin-bottom:1rem;">📊 Recent Activity</h3>
+      <div style="max-height:300px; overflow-y:auto;">
+        {% for activity in recent_activity %}
+          <div style="padding:0.75rem; border-bottom:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span>{{ activity.description }}</span>
+              <small style="color:var(--text-muted);">{{ activity.timestamp.strftime('%d-%m-%Y %H:%M') }}</small>
+            </div>
+          </div>
+        {% endfor %}
+        {% if not recent_activity %}
+          <p style="text-align:center; color:var(--text-muted); padding:2rem;">No recent activity.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2024 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+
+<script>
+  function showTab(tabName) {
+    // Hide all tabs
+    const allTabs = document.querySelectorAll('.tab-content');
+    allTabs.forEach(tab => tab.style.display = 'none');
+
+    // Remove active style from all buttons
+    const allBtns = document.querySelectorAll('.tab-btn');
+    allBtns.forEach(btn => {
+      btn.style.borderBottom = '3px solid transparent';
+      btn.style.color = 'var(--text-muted)';
+    });
+
+    // Show selected tab
+    document.getElementById(tabName + 'Tab-content').style.display = 'block';
+    document.getElementById(tabName + 'Tab').style.borderBottom = '3px solid var(--primary-color)';
+    document.getElementById(tabName + 'Tab').style.color = 'var(--text-primary)';
+  }
+</script>
+
+<!-- MODALS -->
+
+<!-- Notification Modal -->
+<div id="notificationModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📧 Send Notification</h3>
+      <span class="close" onclick="closeModal('notificationModal')">&times;</span>
+    </div>
+    <form action="/admin/send-notification" method="POST">
+      <div class="form-group">
+        <label for="recipient">Recipient:</label>
+        <select name="recipient_type" id="recipient" required>
+          <option value="all">All Users</option>
+          <option value="selected">Selected Users (from list)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="subject">Subject:</label>
+        <input type="text" name="subject" id="subject" required>
+      </div>
+      <div class="form-group">
+        <label for="message">Message:</label>
+        <textarea name="message" id="message" rows="5" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Send Notification</button>
+    </form>
+  </div>
+</div>
+
+<!-- Bulk Approve Modal -->
+<div id="bulkApproveModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>✅ Bulk Approve Claims</h3>
+      <span class="close" onclick="closeModal('bulkApproveModal')">&times;</span>
+    </div>
+    <form action="/admin/bulk-approve-claims" method="POST">
+      <div class="form-group">
+        <label>Select Claims to Approve:</label>
+        <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.5rem;">
+          {% for claim in claims %}
+            {% if claim.status == 'pending' %}
+              <label style="display: block; margin-bottom: 0.5rem;">
+                <input type="checkbox" name="claim_ids" value="{{ claim._id }}">
+                {{ claim.item_name or claim.item_id }} - {{ claim.claimant_name }}
+              </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success">Approve Selected Claims</button>
+    </form>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📊 Export Data</h3>
+      <span class="close" onclick="closeModal('exportModal')">&times;</span>
+    </div>
+    <form id="exportForm" action="/admin/export/items" method="GET">
+      <div class="form-group">
+        <label for="export_type">Export Type:</label>
+        <select name="export_type" id="export_type" required>
+          <option value="items">Items Data</option>
+          <option value="claims">Claims Data</option>
+          <option value="users">Users Data</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="format">Format:</label>
+        <select name="format" id="format" required>
+          <option value="csv">CSV</option>
+          <option value="pdf">PDF Report</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-warning">Export Data</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// Modal functions
+function showModal(modalId) {
+  document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+document.getElementById('exportForm').addEventListener('submit', function (e) {
+  const exportType = document.getElementById('export_type').value;
+  this.action = '/admin/export/' + exportType;
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  if (event.target.classList.contains('modal')) {
+    event.target.style.display = 'none';
+  }
+}
+</script>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
+

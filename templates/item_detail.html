@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ item.name }} - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') %}
+        <li><a href="/admin" class="btn-nav">⚙️ Admin Dashboard</a></li>
+        <li><a href="/logout" class="btn-logout">Logout</a></li>
+      {% else %}
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/report">➕ Report Item</a></li>
+            <li><a href="/my-items">🧳 My Items</a></li>
+            <li><a href="/matches">🔄 Matches</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-claims">📋 My Claims</a></li>
+            <li><a href="/notifications">🔔 Notifications</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-chats">💬 Chats</a></li>
+            <li><a href="/contact-admin">📧 Contact Admin</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+          </ul>
+        </li>
+      {% endif %}
+    {% else %}
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/register" class="btn-nav">Sign up</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="page-content">
+  <a href="/browse" class="btn btn-outline" style="margin-bottom: 2rem;">← Back to Browse</a>
+
+  <div class="grid-2">
+    <div>
+      {% if item.image %}
+        <img src="/static/uploads/{{ item.image }}" alt="{{ item.name }}" style="width:100%; border-radius:1rem; box-shadow: var(--shadow-lg);">
+      {% else %}
+        <div style="width:100%; height:400px; background:#e5e7eb; display:flex; align-items:center; justify-content:center; font-size:5rem; border-radius:1rem;">📦</div>
+      {% endif %}
+    </div>
+
+    <div>
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+        <h1>{{ item.name }}</h1>
+        {% if item.type == 'lost' %}
+          <span style="background:#fee2e2; color:#991b1b; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:600; font-size:0.9rem;">LOST ITEM</span>
+        {% else %}
+          <span style="background:#d1fae5; color:#065f46; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:600; font-size:0.9rem;">FOUND ITEM</span>
+        {% endif %}
+      </div>
+
+      <div class="card card-body" style="margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:1rem;">Item Details</h3>
+        
+        <div style="margin-bottom:1rem;">
+          <strong>Category:</strong>
+          <p>{{ item.category }}</p>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <strong>Location:</strong>
+          <p>{{ item.location }}</p>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <strong>Description:</strong>
+          <p>{{ item.description }}</p>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <strong>Status:</strong>
+          <p>
+            {% if item.status == 'active' %}
+              <span style="background:#d1fae5; color:#065f46; padding:0.25rem 0.75rem; border-radius:0.25rem;">Active</span>
+            {% elif item.status == 'claimed' %}
+              <span style="background:#fef3c7; color:#78350f; padding:0.25rem 0.75rem; border-radius:0.25rem;">Claimed</span>
+            {% endif %}
+          </p>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <strong>Reported by:</strong>
+          <p>{{ item.reporter_name }}</p>
+        </div>
+
+        <div>
+          <strong>Reported on:</strong>
+          <p>{{ item.created_at.strftime('%d %B %Y at %H:%M') }}</p>
+        </div>
+      </div>
+
+      {% if session.get('user_id') and item.status == 'active' %}
+        {% if item.type == 'found' %}
+          <!-- FOUND ITEMS: Show claim button for anyone to claim they own it -->
+          <a href="/claim/{{ item._id }}" class="btn btn-primary" style="width:100%; text-align:center; padding:1rem; font-size:1.1rem; margin-bottom:0.5rem;">📋 Claim - This is Mine!</a>
+          <small style="display:block; text-align:center; color:#666; margin-bottom:1rem;">You'll need to provide proof of ownership. Admin will verify before facilitating contact.</small>
+        {% else %}
+          <!-- LOST ITEMS: Show button for anyone to report they found it -->
+          <a href="/found-match/{{ item._id }}" class="btn btn-success" style="width:100%; text-align:center; padding:1rem; font-size:1.1rem; margin-bottom:0.5rem;">🔍 I Found This Item!</a>
+          <small style="display:block; text-align:center; color:#666; margin-bottom:1rem;">Report that you found this item. Admin will verify and connect you with the owner.</small>
+        {% endif %}
+      {% elif not session.get('user_id') %}
+        <a href="/login" class="btn btn-primary" style="width:100%; text-align:center; padding:1rem; font-size:1.1rem;">Login to Claim / Report Found</a>
+      {% else %}
+        <div class="alert alert-warning" style="text-align:center; margin-top:1rem;">
+          ✅ This item has been claimed and resolved.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
+

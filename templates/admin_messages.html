@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Messages - ReUnite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/admin" class="btn-nav">⚙️ Dashboard</a></li>
+    <li><a href="/logout" class="btn-logout">Logout</a></li>
+  </ul>
+</nav>
+
+<div class="page-content">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+    <h1>📧 Contact Messages</h1>
+    {% if unread > 0 %}
+      <span style="background:#fee2e2; color:#991b1b; padding:0.4rem 0.9rem; border-radius:1rem; font-weight:600;">{{ unread }} unread</span>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+    <div style="display:grid; gap:1rem;">
+      {% for msg in messages %}
+        <div class="card card-body" style="border-left:4px solid #2563eb;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+            <div>
+              <strong style="font-size:1.05rem;">{{ msg.name }}</strong>
+              <span style="color:var(--text-muted); margin-left:0.5rem; font-size:0.9rem;">{{ msg.email }}</span>
+            </div>
+            <small style="color:var(--text-muted);">{{ msg.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+          </div>
+          <p style="margin:0; color:var(--text-primary); line-height:1.6;">{{ msg.message }}</p>
+          {% if msg.user_id %}
+            <small style="color:var(--text-muted); display:block; margin-top:0.5rem;">User ID: {{ msg.user_id }}</small>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align:center; padding:3rem; background:white; border-radius:1rem; box-shadow:var(--shadow-md);">
+      <p style="font-size:1.2rem; color:var(--text-muted);">No messages yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+</footer>
+</body>
+</html>
+

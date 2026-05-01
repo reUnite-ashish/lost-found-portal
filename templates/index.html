@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReUnite - Lost & Found Portal</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">📍</div>
+    ReUnite
+  </a>
+
+  <ul class="navbar-links">
+    <li><a href="/">🏠 Home</a></li>
+    <li><a href="/browse">🔍 Browse</a></li>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') %}
+        <li><a href="/admin" class="btn-nav">⚙️ Admin Dashboard</a></li>
+        <li><a href="/logout" class="btn-logout">Logout</a></li>
+      {% else %}
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">📦 Items <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/report">➕ Report Item</a></li>
+            <li><a href="/my-items">🧳 My Items</a></li>
+            <li><a href="/matches">🔄 Matches</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">🛡️ Activity <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-claims">📋 My Claims</a></li>
+            <li><a href="/notifications">🔔 Notifications</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">💬 Connect <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/my-chats">💬 Chats</a></li>
+            <li><a href="/contact-admin">📧 Contact Admin</a></li>
+          </ul>
+        </li>
+        <li class="nav-dropdown">
+          <button class="nav-drop-btn" type="button">👤 Account <span class="drop-arrow">▾</span></button>
+          <ul class="nav-drop-menu">
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/logout" class="nav-logout-link">🚪 Logout</a></li>
+          </ul>
+        </li>
+      {% endif %}
+    {% else %}
+      <li><a href="/login">Log in</a></li>
+      <li><a href="/register" class="btn-nav">Sign up</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- FLASH MESSAGES -->
+<div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<!-- MAIN CONTENT -->
+
+<!-- HERO SECTION -->
+<div class="hero">
+  <h1>Lost something?<br>Let's find it.</h1>
+  <p>The smartest, fastest way to report lost belongings or connect found items with their rightful owners.</p>
+  <div class="hero-buttons">
+    <a href="/browse" class="btn-hero-primary">🔍 Browse Items</a>
+    {% if session.get('user_id') %}
+      <a href="/report" class="btn-hero-outline">+ Report an Item</a>
+    {% else %}
+      <a href="/register" class="btn-hero-outline">+ Report an Item</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-number">{{ lost_count }}</div>
+    <div class="stat-label">Lost Reports</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">{{ found_count }}</div>
+    <div class="stat-label">Found Reports</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">{{ match_count }}</div>
+    <div class="stat-label">Successful Matches</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="page-content">
+  <div class="section-title">📖 How It Works</div>
+  <div class="grid-3" style="margin-bottom:48px;">
+    <div class="card card-body" style="text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">📝</div>
+      <h3 class="card-title">1. Report</h3>
+      <p style="color:var(--text-muted);">Submit a lost or found item with details like name, category, location and photo.</p>
+    </div>
+    <div class="card card-body" style="text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">🤖</div>
+      <h3 class="card-title">2. Auto Match</h3>
+      <p style="color:var(--text-muted);">Our algorithm automatically finds matching lost & found items based on category and description.</p>
+    </div>
+    <div class="card card-body" style="text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">🤝</div>
+      <h3 class="card-title">3. Reunite</h3>
+      <p style="color:var(--text-muted);">Submit a claim with proof of ownership. Admin verifies and connects you with the item.</p>
+    </div>
+  </div>
+
+  <!-- FEATURES SECTION -->
+  <div class="section-title" style="margin-top: 3rem;">✨ Features</div>
+  <div class="grid-3">
+    <div class="card card-body">
+      <div style="font-size:2rem; margin-bottom:1rem;">🔐</div>
+      <h4>Secure Authentication</h4>
+      <p>Protected user accounts with encrypted passwords and secure login system.</p>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:2rem; margin-bottom:1rem;">📦</div>
+      <h4>Easy Reporting</h4>
+      <p>Report lost/found items with image uploads and detailed descriptions.</p>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:2rem; margin-bottom:1rem;">🔍</div>
+      <h4>Smart Search</h4>
+      <p>Search and filter items by name, category, location and type.</p>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:2rem; margin-bottom:1rem;">🗂️</div>
+      <h4>Smart Categorization</h4>
+      <p>Items organized in logical categories for better organization.</p>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:2rem; margin-bottom:1rem;">🔔</div>
+      <h4>Real-Time Notifications</h4>
+      <p>Get alerts when matching items are found automatically.</p>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:2rem; margin-bottom:1rem;">👨‍💻</div>
+      <h4>Admin Panel</h4>
+      <p>Manage claims, verify ownership, and monitor all reports.</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top: 3.5rem;">🎓 The Team</div>
+  <div class="project-team-wrap">
+    <div class="project-overview">
+      <span class="project-badge">Students Project</span>
+      <h3>Lost & Found Portal (ReUnite)</h3>
+      <p>
+       Developed by BCA 6th Semester (Final Year) students of <b>Maharana Pratap PG College, Gorakhpur</b>. This project is designed to help users report lost items and connect them with found items using a smart matching system.
+      </p>
+      <div class="project-meta-grid">
+        <div class="project-meta-item">
+          <strong>Department:</strong>
+          <span>Bachelor of Computer Applications (BCA)</span>
+        </div>
+        <div class="project-meta-item">
+          <strong>Batch:</strong>
+          <span>Final Year (Semester 6) | Session 2025–26</span>
+        </div>
+        <div class="project-meta-item">
+          <strong>Project Type:</strong>
+          <span>Major Team Project (Academic)</span>
+        </div>
+        <div class="project-meta-item">
+          <strong>Tech Stack:</strong>
+          <span>Python (Flask), MongoDB Atlas, HTML, CSS, JavaScript</span>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="team-subtitle">Developed By</h4>
+    <div class="team-grid">
+      <article class="team-card">
+        <img src="/static/uploads/asd.jpeg" alt="Mr. Ashish Kumar Pandey" class="team-photo">
+        <h5>Mr. Ashish Kumar Pandey</h5>
+        <p class="team-role">Team Lead & Full Stack Developer</p>
+        <p class="team-note">Worked on Flask backend, MongoDB integration, authentication system, and overall project development.</p>
+      </article>
+
+      <article class="team-card">
+        <img src="/static/uploads/ni.jpeg" alt="Mr. Nitesh Tiwari" class="team-photo">
+        <h5>Mr. Nitesh Tiwari</h5>
+        <p class="team-role">Frontend Developer and Database Management</p>
+        <p class="team-note">Designed UI pages, improved user experience, and contributed to layout and styling.</p>
+      </article>
+
+      <article class="team-card">
+        <img src="/static/uploads/sud.jpeg" alt="Mr. Sudhanshu Kumar Mishra" class="team-photo">
+        <h5>Mr. Sudhanshu Kumar Mishra</h5>
+        <p class="team-role">Testing, Debugging & Documentation</p>
+        <p class="team-note">Assisted in testing application features, identifying bugs, and preparing project documentation.</p>
+      </article>
+
+    </div>
+
+    <h4 class="team-subtitle">Under the Guidance of</h4>
+    <div class="guide-grid">
+      <div class="guide-card">
+        <h5>Assistant Prof. Arpita Singh</h5>
+        <p>Assistant Professor, Department of Computer Applications (Head of Department)</p>
+      </div>
+      <div class="guide-card">
+        <h5>Assistant  Prof. Gaurav Dwivedi</h5>
+        <p>Project Coordinator, Department of Computer Applications</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 ReUnite Portal. Reuniting people with what matters.</p>
+  <p style="margin-top:6px; font-size:12px;">Built with Python (Flask) · MongoDB · HTML · CSS · JavaScript</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
