@@ -157,7 +157,6 @@ db = client['reunite']
 
 ## Future Enhancements 🚀
 
-- MongoDB integration for persistent storage
 - Email notifications
 - SMS alerts
 - Location-based search (maps integration)
