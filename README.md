@@ -105,7 +105,7 @@ OPL/
 
 - **Backend**: Python, Flask
 - **Frontend**: HTML5, CSS3, JavaScript
-- **Database**: In-memory (ready for MongoDB integration)
+- **Database**: MongoDB
 - **Styling**: Custom CSS with responsive design
 - **File Upload**: Werkzeug
 
